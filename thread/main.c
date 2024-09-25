@@ -41,17 +41,20 @@ void *saludar()
 static void ft_init(t_instruc *instrucciones, char **argc, t_info *philos)
 {
     pthread_t hilo;
-    instrucciones = ft_initList(instrucciones, argc);
-    philos = ft_listConcatenacion(instrucciones);
-    instrucciones->info = philos;
+    
     t_info *filo = ft_iniciar(filo, instrucciones);
-    if (instrucciones->n_filosofos == 1)
+    if (atoi(argc[1]) == 1)
         ft_error(1, argc[1]);
     else
     {
         pthread_create(&hilo,NULL,saludar,NULL);
         pthread_join(hilo, NULL);
+        instrucciones = ft_initList(instrucciones, argc);
+        philos = ft_listConcatenacion(instrucciones);
+        instrucciones->info = philos;
+        ft_create_thread(philos, atoi(argc[1]), instrucciones);
     }
+    
 }
 
 int main(int arc, char **argc) //cantidad de filosofos,tiempo de muerte,tiempo para comer,tiempo para dormir,op(numero de comidas)

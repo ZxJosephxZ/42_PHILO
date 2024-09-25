@@ -35,5 +35,41 @@ t_instruc *ft_initList(t_instruc *instrucciones, char **argc)
 
 t_info *ft_listConcatenacion(t_instruc *instrucciones)
 {
-    //
+    int i;
+    t_info *new;
+
+    i = 0;
+    new = malloc(sizeof(t_info)*instrucciones->n_filosofos);
+    while (i < instrucciones->n_filosofos)
+    {
+        new[i].number = i + 1;
+        new[i].instrucciones = instrucciones;
+        if (i == 0)
+        {       
+            new[i].left_fork = instrucciones->n_filosofos - 1;
+        }
+        else
+        {
+            new[i].left_fork = i - 1;
+        }
+        new[i].right_fork = i;
+        new[i].times_eat = 0;
+        pthread_mutex_init(&new[i].check_last_eat, NULL);
+        new[i].last_eat = get_time();
+        i++;
+    }
+    return new;
+}
+
+void ft_create_thread(t_info *philo, int number, t_instruc *instrucciones)
+{
+    int i;
+
+    i = -1;
+    if (pthread_create(&philo->instrucciones->thread_dead, NULL, &check_death,  (void*)philo))
+        return (1);
+    while (i < number)
+    {
+
+    }
 }

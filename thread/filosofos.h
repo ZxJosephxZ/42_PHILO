@@ -60,5 +60,7 @@ t_instruc *ft_initList(t_instruc *instrucciones, char **argc);
 t_info *ft_listConcatenacion(t_instruc *instrucciones);
 int ft_matrix_len(char **argc);
 int get_time(void);
-
+void ft_deestroyMutex(t_info *new);
+void ft_create_thread(t_info *philo, int number, t_instruc *instrucciones);
+void *check_death(void *philo);
 #endif
