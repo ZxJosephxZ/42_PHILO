@@ -68,8 +68,19 @@ void ft_create_thread(t_info *philo, int number, t_instruc *instrucciones)
     i = -1;
     if (pthread_create(&philo->instrucciones->thread_dead, NULL, &check_death,  (void*)philo))
         return (1);
-    while (i < number)
+    while (++i < number)
     {
-
+        if (pthread_create(&(philo[i].philo_thread),NULL, &routine, (void *)&philo[i]))
+        {
+            return 1;
+        }
     }
+    i = -1;
+    while (++i < number)
+    {
+        if (pthread_join(philo[i].philo_thread, NULL))
+            return (1);
+    }
+    ft_deestroyMutex(philo);
+    return (0);
 }

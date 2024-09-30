@@ -33,22 +33,15 @@ t_info *ft_iniciar(t_info *info, t_instruc *instrucciones)
 
 }
 
-void *saludar()
-{
-    printf("hola hilo\n");
-}
 
 static void ft_init(t_instruc *instrucciones, char **argc, t_info *philos)
 {
-    pthread_t hilo;
     
     t_info *filo = ft_iniciar(filo, instrucciones);
     if (atoi(argc[1]) == 1)
         ft_error(1, argc[1]);
     else
     {
-        pthread_create(&hilo,NULL,saludar,NULL);
-        pthread_join(hilo, NULL);
         instrucciones = ft_initList(instrucciones, argc);
         philos = ft_listConcatenacion(instrucciones);
         instrucciones->info = philos;
@@ -66,8 +59,6 @@ int main(int arc, char **argc) //cantidad de filosofos,tiempo de muerte,tiempo p
         if (ft_parseo(arc, argc))
         {
             ft_init(instrucciones, argc, philos);
-
-            printf("despues del hilo\n");
         }
     }
     else

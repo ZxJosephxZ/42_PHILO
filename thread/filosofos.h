@@ -10,57 +10,52 @@
 #include <pthread.h>
 //gcc tus .c -lpthread
 
+# define PHILO_EAT "\033[1;93mis eating 🍝\033[0;39m"
+# define PHILO_SLEEP "\033[1;95mis sleeping 🌙\033[0;39m"
+# define PHILO_THINK "\033[1;90mis thinking 💭\033[0;39m"
+# define PHILO_TAKE_FORK "\033[1;94mhas taken a fork 🍴\033[0;39m"
+# define PHILO_DIE "\033[1;91mdied 💀\033[0;39m"
+
+
+typedef enum e_philo_error
+{
+    END = 1,
+	INV_ARGS = -1,
+	TOO_MANY_PHILO = -2,
+	INV_PHILO_COUNT = -3,
+	INV_DIE_TIME = -4,
+	INV_EAT_TIME = -5,
+	INV_SLEEP_TIME = -6,
+	INV_REPEAT_COUNT = -7,
+	NO_MEMORY = -8,
+	THREAD_FAILED = -9
+}t_philo_error;
+
 
 typedef struct t_info
 {
-    int number;
-    int left_fork;
-    int  right_fork;
-    long times_eat;
-    time_t last_eat;
+    int id;
+    useconds_t last_eat;
     pthread_t philo_thread;
-    pthread_mutex_t check_last_eat;
+    pthread_mutex_t fork_lock;
+    pthread_mutex_t last_eat_lock;
     struct t_instruc *instrucciones;
 }t_info;
 
 typedef struct t_instruc
 {
     int n_filosofos;
-    long t_comida;
-    long t_dormir;
-    long t_muerte;
-    long n_fork;
+    useconds_t init_time;
+    long repeat_count;
+    long long t_died;
+    long long t_eat;
+    long long t_sleep;
     int n_comidas;
-    long all_comidas;
-    time_t t_start;
-    pthread_t thread_dead;
-    int dead_flags;
-    pthread_mutex_t thread_mutex;
-    pthread_mutex_t dead_mutex;
-    pthread_mutex_t dead_flag_mutes;
-    pthread_mutex_t all_eat_mutex;
-    pthread_mutex_t print_mutex;
-    pthread_mutex_t *forks_mutex;
-    t_info *info;
+    int dead;
+    pthread_mutex_t n_eat_lock;
+    pthread_mutex_t died_lock;
     
 }t_instruc;
 
-enum e_message
-{
-    LEFT_FORK,
-    RIGHT_FORK,
-    EAT,
-    THINK,
-    SLEEP,
-    DYE
-};
 
-void ft_error(int i, char *error);
-t_instruc *ft_initList(t_instruc *instrucciones, char **argc);
-t_info *ft_listConcatenacion(t_instruc *instrucciones);
-int ft_matrix_len(char **argc);
-int get_time(void);
-void ft_deestroyMutex(t_info *new);
-void ft_create_thread(t_info *philo, int number, t_instruc *instrucciones);
-void *check_death(void *philo);
 #endif
