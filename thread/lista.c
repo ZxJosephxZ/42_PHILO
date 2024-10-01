@@ -1,86 +1,95 @@
 #include "filosofos.h"
 
-t_instruc *ft_initList(t_instruc *instrucciones, char **argc)
+void *philo_init(int n_philo, t_list *philos)
 {
     int i;
+    t_list *start;
+    t_philo *philo;
 
     i = -1;
-    instrucciones->n_filosofos = atoi(argc[1]);
-    instrucciones->t_muerte = atoi(argc[2]);
-    instrucciones->t_comida = atoi(argc[3]);
-    instrucciones->t_dormir = atoi(argc[4]);
-    instrucciones->dead_flags = 0;
-    instrucciones->all_comidas = 0;
-    if (ft_matrix_len(argc) == 6)
+    start = philos;
+    while (++i < n_philo)
     {
-        instrucciones->n_comidas = atoi(argc[5]);
+        philo = start->content;
+        if (pthread_create(&philo->philo_thread, NULL, start_thread, start))
+           return (philo_exit(philos, NULL, THREAD_FAILED));
+        start = start->next;
     }
-    else
+    philo_monitor(start, NULL);
+    i = -1;
+    while (++i < n_philo)
     {
-        instrucciones->n_comidas = 0;
+        philo = start->content;
+        pthread_join(philo->philo_thread, NULL);
+        start = start->next;
     }
-    instrucciones->forks_mutex = malloc(sizeof(pthread_mutex_t)* instrucciones->n_filosofos);
-    pthread_mutex_init(&(instrucciones)->dead_flag_mutes, NULL);
-    pthread_mutex_init(&(instrucciones)->print_mutex, NULL);
-    pthread_mutex_init(&(instrucciones)->dead_mutex, NULL);
-    pthread_mutex_init(&(instrucciones)->all_eat_mutex, NULL);
-    pthread_mutex_init(&(instrucciones)->thread_mutex, NULL);
-    while (++i < instrucciones->n_filosofos)
-    {
-        pthread_mutex_init(&(instrucciones)->forks_mutex[i], NULL);
-    }
-    instrucciones->t_start = get_time();
-    return instrucciones;
+    return (NULL);
 }
 
-t_info *ft_listConcatenacion(t_instruc *instrucciones)
+void *philo_monitor(t_list *start, t_philo *philo)
 {
-    int i;
-    t_info *new;
+    long n_eat;
+    long last_eat;
 
-    i = 0;
-    new = malloc(sizeof(t_info)*instrucciones->n_filosofos);
-    while (i < instrucciones->n_filosofos)
+    while (1)
     {
-        new[i].number = i + 1;
-        new[i].instrucciones = instrucciones;
-        if (i == 0)
-        {       
-            new[i].left_fork = instrucciones->n_filosofos - 1;
-        }
-        else
+        philo = start->content;
+        pthread_mutex_lock(&philo->instrucciones->n_eat_lock);
+        n_eat = philo->instrucciones->n_comidas;
+        pthread_mutex_unlock(&philo->instrucciones->n_eat_lock);
+        pthread_mutex_lock(&philo->last_eat_lock);
+        last_eat = philo->last_eat;
+        pthread_mutex_unlock(&philo->last_eat_lock);
+        if (philo_get_time() - philo->instrucciones->init_time - last_eat >= \
+            philo->instrucciones->t_died || n_eat == \
+            philo->instrucciones->n_filosofos * philo->instrucciones->repeat_count)
         {
-            new[i].left_fork = i - 1;
+            pthread_mutex_lock(&philo->instrucciones->died_lock);
+            philo->instrucciones->dead = 1;
+            pthread_mutex_unlock(&philo->instrucciones->died_lock);
+            if (n_eat != philo->instrucciones->n_filosofos * philo->instrucciones->repeat_count)
+                philo_timestamp(start, PHILO_DIE, 0);
+            return (NULL);
         }
-        new[i].right_fork = i;
-        new[i].times_eat = 0;
-        pthread_mutex_init(&new[i].check_last_eat, NULL);
-        new[i].last_eat = get_time();
-        i++;
+        start = start->next;
     }
-    return new;
 }
 
-void ft_create_thread(t_info *philo, int number, t_instruc *instrucciones)
+void philo_actions(t_list *node, t_philo *philo, t_philo *next)
 {
+    pthread_mutex_lock(&philo->fork_lock);
+    philo_timestamp(node, PHILO_TAKE_FORK, 0);
+    pthread_mutex_lock(&next->fork_lock);
+    philo_timestamp(node, PHILO_TAKE_FORK, 0);
+    pthread_mutex_lock(&philo->last_eat_lock);
+    philo->last_meal = philo_get_time() - philo->instrucciones->init_time;
+    pthread_mutex_unlock(&philo->last_eat_lock);
+    philo_timestamp(node, PHILO_EAT, philo->instrucciones->t_eat);
+    philo_timestamp(node, PHILO_SLEEP, 0);
+    pthread_mutex_unlock(&next->fork_lock);
+    pthread_mutex_unlock(&philo->fork_lock);
+    ft_usleep(philo->instrucciones->t_sleep);
+    philo_timestamp(node, PHILO_THINK, 0);
+}
+
+void *start_thread(void *node)
+{
+    t_philo *philo;
+    t_philo *next;
     int i;
 
     i = -1;
-    if (pthread_create(&philo->instrucciones->thread_dead, NULL, &check_death,  (void*)philo))
-        return (1);
-    while (++i < number)
+    philo = ((struct s_list *)node)->content;
+    next = ((struct s_list *)node)->next->content;
+    ft_usleep(!(philo->id % 2) * 2);
+    pthread_mutex_lock(&philo->instrucciones->died_lock);
+    while (philo->id != next->id && !philo->instrucciones->dead && \
+        (philo->instrucciones->repeat_count == -2 || ++i < philo->instrucciones->repeat_count))
     {
-        if (pthread_create(&(philo[i].philo_thread),NULL, &routine, (void *)&philo[i]))
-        {
-            return 1;
-        }
+        pthread_mutex_unlock(&philo->instrucciones->died_lock);
+        philo_actions(node, philo, next);
+        pthread_mutex_unlock(&philo->instrucciones->died_lock);
     }
-    i = -1;
-    while (++i < number)
-    {
-        if (pthread_join(philo[i].philo_thread, NULL))
-            return (1);
-    }
-    ft_deestroyMutex(philo);
-    return (0);
+    pthread_mutex_unlock(&philo->instrucciones->died_lock);
+    return (NULL);
 }

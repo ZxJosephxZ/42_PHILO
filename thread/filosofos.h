@@ -16,6 +16,7 @@
 # define PHILO_TAKE_FORK "\033[1;94mhas taken a fork 🍴\033[0;39m"
 # define PHILO_DIE "\033[1;91mdied 💀\033[0;39m"
 
+	
 
 typedef enum e_philo_error
 {
@@ -31,8 +32,13 @@ typedef enum e_philo_error
 	THREAD_FAILED = -9
 }t_philo_error;
 
+typedef struct s_list
+{
+	void			*content;
+	struct s_list	*next;
+}	t_list;
 
-typedef struct t_info
+typedef struct t_philo
 {
     int id;
     useconds_t last_eat;
@@ -40,7 +46,7 @@ typedef struct t_info
     pthread_mutex_t fork_lock;
     pthread_mutex_t last_eat_lock;
     struct t_instruc *instrucciones;
-}t_info;
+}t_philo;
 
 typedef struct t_instruc
 {
@@ -57,5 +63,10 @@ typedef struct t_instruc
     
 }t_instruc;
 
-
+void *philo_monitor(t_list *start, t_philo *philo);
+void *philo_init(int n_philo, t_list *philos);
+void *start_thread(void *node);
+void philo_actions(t_list *node, t_philo *philo, t_philo *next);
+int ft_usleep(useconds_t seg);
+useconds_t philo_get_time(void);
 #endif
