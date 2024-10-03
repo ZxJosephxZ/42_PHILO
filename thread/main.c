@@ -1,18 +1,5 @@
 #include "filosofos.h"
 
-int ft_isnum(char *arg)
-{
-    int prueba; //diseñar atoi que no acepte espacios
-
-    prueba = atoi(arg);
-    if (0 < prueba && prueba< INT_MAX )
-    {
-        return 1;
-    }
-    ft_error(0, arg);
-    return 0;
-}
-
 static t_instruc ft_parseo(char **argc)
 {
     t_instruc instruct;
@@ -41,29 +28,6 @@ static t_instruc ft_parseo(char **argc)
     return (instruct);
 }
 
-t_info *ft_iniciar(t_info *info, t_instruc *instrucciones)
-{
-    info = malloc(sizeof(t_info));
-
-}
-
-
-static void ft_init(t_instruc *instrucciones, char **argc, t_info *philos)
-{
-    
-    t_info *filo = ft_iniciar(filo, instrucciones);
-    if (atoi(argc[1]) == 1)
-        ft_error(1, argc[1]);
-    else
-    {
-        instrucciones = ft_initList(instrucciones, argc);
-        philos = ft_listConcatenacion(instrucciones);
-        instrucciones->info = philos;
-        ft_create_thread(philos, atoi(argc[1]), instrucciones);
-    }
-    
-}
-
 int main(int arc, char **argc) //cantidad de filosofos,tiempo de muerte,tiempo para comer,tiempo para dormir,op(numero de comidas)
 {
     t_instruc instruct;
@@ -85,7 +49,7 @@ int main(int arc, char **argc) //cantidad de filosofos,tiempo de muerte,tiempo p
     instruct.n_comidas = 0;
     pthread_mutex_init(&instruct.died_lock, NULL);
     pthread_mutex_init(&instruct.n_eat_lock, NULL);
-    philos = philo_last(&instruct);
+    philos = philo_lst(&instruct);
     ft_lstlast(philos)->next = philos;
     philo_init(instruct.n_filosofos, philos);
     philo_exit(philos, NULL, END);

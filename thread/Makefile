@@ -1,5 +1,6 @@
 
-SRC = main.c lista.c time.c utils.c
+SRC = main.c lista.c time.c  philo_utils.c \
+	 lista_utils.c pars_number.c pars_string.c
 NAME = filosofos
 CFLAGS = -Wall -Wextra -Werror -pthread
 CC = gcc

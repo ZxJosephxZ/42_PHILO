@@ -62,7 +62,7 @@ void philo_actions(t_list *node, t_philo *philo, t_philo *next)
     pthread_mutex_lock(&next->fork_lock);
     philo_timestamp(node, PHILO_TAKE_FORK, 0);
     pthread_mutex_lock(&philo->last_eat_lock);
-    philo->last_meal = philo_get_time() - philo->instrucciones->init_time;
+    philo->last_eat = philo_get_time() - philo->instrucciones->init_time;
     pthread_mutex_unlock(&philo->last_eat_lock);
     philo_timestamp(node, PHILO_EAT, philo->instrucciones->t_eat);
     philo_timestamp(node, PHILO_SLEEP, 0);
